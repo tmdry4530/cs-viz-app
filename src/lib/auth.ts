@@ -5,6 +5,7 @@ import Credentials from "next-auth/providers/credentials"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
+import { authConfig } from "@/lib/auth.config"
 
 const providers: NextAuthConfig["providers"] = []
 
@@ -51,17 +52,17 @@ providers.push(
   })
 )
 
-export const authConfig: NextAuthConfig = {
+export const {
+  handlers,
+  auth,
+  signIn,
+  signOut,
+} = NextAuth({
+  ...authConfig,
   adapter: PrismaAdapter(prisma),
   providers,
-  session: {
-    strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
-  },
-  pages: {
-    signIn: "/login",
-  },
   callbacks: {
+    ...authConfig.callbacks,
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id
@@ -74,28 +75,5 @@ export const authConfig: NextAuthConfig = {
       }
       return session
     },
-    async authorized({ auth, request }) {
-      const isLoggedIn = !!auth?.user
-      const { pathname } = request.nextUrl
-
-      // Protected routes
-      const protectedPaths = ["/profile", "/session"]
-      const isProtected = protectedPaths.some((path) =>
-        pathname.startsWith(path)
-      )
-
-      if (isProtected && !isLoggedIn) {
-        return false // redirects to signIn page
-      }
-
-      return true
-    },
   },
-}
-
-export const {
-  handlers,
-  auth,
-  signIn,
-  signOut,
-} = NextAuth(authConfig)
+})
