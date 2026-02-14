@@ -1,0 +1,441 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── NextAuth Models ───────────────────────────────────────
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  name           String?
+  image          String?
+  hashedPassword String?
+  role           String    @default("user") // user | admin
+  emailVerified  DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      AuthSession[]
+  sessionRuns   SessionRun[]
+  reflections   Reflection[]
+  shareLinks    ShareLink[]
+  feedPosts     FeedPost[]
+  comments      Comment[]
+  reactions     Reaction[]
+  reports       Report[]
+  adminActions  AdminAction[]
+  diagnosticAttempts DiagnosticAttempt[]
+  weaknessMaps      WeaknessMap[]
+  subscription      Subscription?
+  ownedStudyRooms   StudyRoom[]
+  studyRoomMembers  StudyRoomMember[]
+  studyRoomMessages StudyRoomMessage[]
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model AuthSession {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+// ─── Learning Content ──────────────────────────────────────
+
+model Module {
+  id         String   @id @default(cuid())
+  slug       String   @unique
+  title      String
+  subtitle   String
+  outcomes   String[] // PostgreSQL array
+  difficulty String
+  time       String
+  tag        String
+  color      String
+  vizConfig  Json?    // Visualization configuration
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  sessionRuns         SessionRun[]
+  quizQuestions       QuizQuestion[]
+  applyTasks          ApplyTask[]
+  diagnosticQuestions DiagnosticQuestion[]
+  versions            ModuleVersion[]
+}
+
+model ModuleVersion {
+  id        String   @id @default(cuid())
+  moduleId  String
+  version   Int
+  data      Json     // snapshot of module fields at this version
+  changelog String?
+  createdBy String
+  createdAt DateTime @default(now())
+
+  module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@index([moduleId])
+  @@unique([moduleId, version])
+}
+
+// ─── Session Tracking ──────────────────────────────────────
+
+model SessionRun {
+  id             String    @id @default(cuid())
+  userId         String
+  moduleId       String
+  status         String    @default("active") // active | completed | abandoned
+  startedAt      DateTime  @default(now())
+  completedAt    DateTime?
+  checkpointData Json?     // { stage, timeRemaining, quizAnswers, ... }
+  score          Int?
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  module     Module     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  quizAttempts   QuizAttempt[]
+  applyAttempts  ApplyAttempt[]
+  reflections    Reflection[]
+  shareLinks     ShareLink[]
+  feedPosts      FeedPost[]
+
+  @@index([userId])
+  @@index([moduleId])
+}
+
+// ─── Quiz ──────────────────────────────────────────────────
+
+model QuizQuestion {
+  id            String   @id @default(cuid())
+  moduleId      String
+  type          String   // multiple-choice | true-false | fill-in-blank
+  question      String
+  options       Json?    // ["option1", "option2", ...] for MC
+  correctAnswer String
+  explanation   String
+  stepJump      Int?     // viz step to jump back to on incorrect
+
+  module   Module        @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  attempts QuizAttempt[]
+
+  @@index([moduleId])
+}
+
+model QuizAttempt {
+  id           String   @id @default(cuid())
+  sessionRunId String
+  questionId   String
+  answer       String
+  correct      Boolean
+  answeredAt   DateTime @default(now())
+
+  sessionRun SessionRun   @relation(fields: [sessionRunId], references: [id], onDelete: Cascade)
+  question   QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionRunId])
+}
+
+// ─── Apply Task ────────────────────────────────────────────
+
+model ApplyTask {
+  id       String   @id @default(cuid())
+  moduleId String
+  prompt   String
+  solution String
+  hints    String[]
+
+  module   Module         @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  attempts ApplyAttempt[]
+
+  @@index([moduleId])
+}
+
+model ApplyAttempt {
+  id           String   @id @default(cuid())
+  sessionRunId String
+  taskId       String
+  submission   String
+  correct      Boolean
+  feedback     String?
+  answeredAt   DateTime @default(now())
+
+  sessionRun SessionRun @relation(fields: [sessionRunId], references: [id], onDelete: Cascade)
+  task       ApplyTask  @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([sessionRunId])
+}
+
+// ─── Reflection ────────────────────────────────────────────
+
+model Reflection {
+  id           String   @id @default(cuid())
+  sessionRunId String
+  userId       String
+  content      String
+  isPublic     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  sessionRun SessionRun @relation(fields: [sessionRunId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([sessionRunId])
+  @@index([userId])
+}
+
+// ─── Share ─────────────────────────────────────────────────
+
+model ShareLink {
+  id           String   @id @default(cuid())
+  sessionRunId String
+  userId       String
+  slug         String   @unique
+  isActive     Boolean  @default(true)
+  ogImageUrl   String?
+  createdAt    DateTime @default(now())
+
+  sessionRun SessionRun @relation(fields: [sessionRunId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([slug])
+}
+
+// ─── Community Feed ────────────────────────────────────────
+
+model FeedPost {
+  id           String   @id @default(cuid())
+  sessionRunId String
+  userId       String
+  content      String
+  score        Int?
+  badge        String?
+  isPublic     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  sessionRun SessionRun @relation(fields: [sessionRunId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments   Comment[]
+  reactions  Reaction[]
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model Comment {
+  id         String   @id @default(cuid())
+  feedPostId String
+  userId     String
+  content    String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  feedPost FeedPost @relation(fields: [feedPostId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([feedPostId])
+}
+
+model Reaction {
+  id         String   @id @default(cuid())
+  feedPostId String
+  userId     String
+  type       String   // like | fire | clap | etc.
+  createdAt  DateTime @default(now())
+
+  feedPost FeedPost @relation(fields: [feedPostId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([feedPostId, userId, type])
+  @@index([feedPostId])
+}
+
+// ─── Moderation ────────────────────────────────────────────
+
+model Report {
+  id         String   @id @default(cuid())
+  targetType String   // post | comment
+  targetId   String
+  userId     String
+  reason     String
+  status     String   @default("pending") // pending | reviewed | resolved | dismissed
+  createdAt  DateTime @default(now())
+
+  user    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  actions AdminAction[]
+
+  @@index([targetType, targetId])
+  @@index([status])
+}
+
+model AdminAction {
+  id       String   @id @default(cuid())
+  reportId String
+  adminId  String
+  action   String   // warn | hide | ban | dismiss
+  note     String?
+  createdAt DateTime @default(now())
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  admin  User   @relation(fields: [adminId], references: [id], onDelete: Cascade)
+}
+
+// ─── Diagnostic ───────────────────────────────────────────
+
+model DiagnosticQuestion {
+  id              String   @id @default(cuid())
+  category        String   // networking | concurrency | version-control | os-basics | data-structures
+  difficulty      String   // easy | medium | hard
+  question        String
+  options         Json     // ["option1", "option2", ...]
+  correctAnswer   String
+  explanation     String
+  relatedModuleId String?
+
+  relatedModule Module?            @relation(fields: [relatedModuleId], references: [id], onDelete: SetNull)
+  answers       DiagnosticAnswer[]
+
+  @@index([category])
+  @@index([difficulty])
+}
+
+model DiagnosticAttempt {
+  id          String    @id @default(cuid())
+  userId      String
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+  score       Float?
+
+  user    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers DiagnosticAnswer[]
+
+  @@index([userId])
+}
+
+model DiagnosticAnswer {
+  id         String   @id @default(cuid())
+  attemptId  String
+  questionId String
+  answer     String
+  correct    Boolean
+  answeredAt DateTime @default(now())
+
+  attempt  DiagnosticAttempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question DiagnosticQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([attemptId])
+  @@index([questionId])
+}
+
+model WeaknessMap {
+  id        String   @id @default(cuid())
+  userId    String
+  category  String
+  score     Float    // 0.0 ~ 1.0 (1.0 = perfect)
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, category])
+  @@index([userId])
+}
+
+// ─── Subscription ─────────────────────────────────────────
+
+model Subscription {
+  id                    String    @id @default(cuid())
+  userId                String    @unique
+  plan                  String    @default("free") // free | pro
+  status                String    @default("active") // active | canceled | past_due
+  stripeCustomerId      String?
+  stripeSubscriptionId  String?
+  currentPeriodEnd      DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─── Study Room ──────────────────────────────────────────
+
+model StudyRoom {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  ownerId     String
+  isActive    Boolean  @default(true)
+  maxMembers  Int      @default(5)
+  createdAt   DateTime @default(now())
+
+  owner    User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  members  StudyRoomMember[]
+  messages StudyRoomMessage[]
+
+  @@index([ownerId])
+}
+
+model StudyRoomMember {
+  id       String   @id @default(cuid())
+  roomId   String
+  userId   String
+  joinedAt DateTime @default(now())
+  role     String   @default("member") // owner | member
+
+  room StudyRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, userId])
+  @@index([roomId])
+  @@index([userId])
+}
+
+model StudyRoomMessage {
+  id        String   @id @default(cuid())
+  roomId    String
+  userId    String
+  content   String
+  createdAt DateTime @default(now())
+
+  room StudyRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, createdAt])
+  @@index([userId])
+}
