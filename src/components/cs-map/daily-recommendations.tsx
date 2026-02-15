@@ -72,7 +72,7 @@ export function DailyRecommendations() {
 
           if (hasModule) {
             return (
-              <Link key={rec.nodeId} href={`/modules/${rec.moduleId}`}>
+              <Link key={rec.nodeId} href={`/session/${rec.moduleId}`}>
                 {content}
               </Link>
             )

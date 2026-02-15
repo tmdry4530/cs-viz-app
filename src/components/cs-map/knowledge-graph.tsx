@@ -18,7 +18,7 @@ export function KnowledgeGraph() {
 
   const handleNodeClick = (node: GraphNode) => {
     if (node.moduleId) {
-      router.push(`/modules/${node.moduleId}`)
+      router.push(`/session/${node.moduleId}`)
     }
   }
 

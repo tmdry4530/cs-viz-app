@@ -165,6 +165,10 @@ export function SessionPlayerShell({ module }: SessionPlayerShellProps) {
     []
   )
 
+  const handleQuizComplete = useCallback(() => handleStageComplete("quiz"), [handleStageComplete])
+  const handleApplyComplete = useCallback(() => handleStageComplete("apply"), [handleStageComplete])
+  const handleReflectionComplete = useCallback(() => handleStageComplete("reflection"), [handleStageComplete])
+
   const handleQuizScore = useCallback(
     (correct: number, total: number) => {
       setQuizScore({ correct, total })
@@ -359,20 +363,20 @@ export function SessionPlayerShell({ module }: SessionPlayerShellProps) {
               <QuizCard
                 sessionId={sessionId}
                 onScoreUpdate={handleQuizScore}
-                onComplete={() => handleStageComplete("quiz")}
+                onComplete={handleQuizComplete}
               />
             )}
             {activeStage === "apply" && (
               <ApplyTaskCard
                 sessionId={sessionId}
-                onComplete={() => handleStageComplete("apply")}
+                onComplete={handleApplyComplete}
               />
             )}
             {activeStage === "reflection" && (
               <ReflectionComposer
                 sessionId={sessionId}
                 userId="local-dev-user"
-                onComplete={() => handleStageComplete("reflection")}
+                onComplete={handleReflectionComplete}
               />
             )}
           </div>

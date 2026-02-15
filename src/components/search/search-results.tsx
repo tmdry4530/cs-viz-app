@@ -23,7 +23,7 @@ export function SearchResults({ modules, users, onSelect }: SearchResultsProps) 
         <CommandGroup heading="모듈">
           {modules.map((mod) => (
             <CommandItem key={mod.id} asChild onSelect={onSelect}>
-              <Link href={`/modules/${mod.id}`} className="flex items-center gap-3">
+              <Link href={`/session/${mod.id}`} className="flex items-center gap-3">
                 <BookOpen className="h-4 w-4 text-muted-foreground" />
                 <div className="flex flex-col gap-0.5">
                   <span className="text-sm font-medium">{mod.title}</span>

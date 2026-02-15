@@ -18,7 +18,7 @@ export async function requirePro(): Promise<
     return {
       authorized: false,
       response: NextResponse.json(
-        { error: "Unauthorized" },
+        { error: "로그인이 필요합니다." },
         { status: 401 }
       ),
     }
@@ -31,7 +31,7 @@ export async function requirePro(): Promise<
       authorized: false,
       response: NextResponse.json(
         {
-          error: "Pro subscription required",
+          error: "Pro 구독이 필요한 기능입니다.",
           upgrade: "/pricing",
         },
         { status: 403 }
@@ -55,7 +55,7 @@ export async function requireFeature(flag: FeatureFlag): Promise<
     return {
       authorized: false,
       response: NextResponse.json(
-        { error: "Unauthorized" },
+        { error: "로그인이 필요합니다." },
         { status: 401 }
       ),
     }
@@ -68,7 +68,7 @@ export async function requireFeature(flag: FeatureFlag): Promise<
       authorized: false,
       response: NextResponse.json(
         {
-          error: `Feature "${flag}" requires Pro subscription`,
+          error: "Pro 구독이 필요한 기능입니다.",
           upgrade: "/pricing",
         },
         { status: 403 }
