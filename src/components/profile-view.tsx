@@ -1,8 +1,7 @@
 "use client"
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
+import { useSession } from "next-auth/react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Trophy,
@@ -10,71 +9,72 @@ import {
   Target,
   Flame,
   BookOpen,
-  CheckCircle2,
+  Loader2,
 } from "lucide-react"
 
-const stats = [
-  { label: "완료 세션", value: "12", icon: BookOpen, color: "text-primary" },
-  { label: "평균 점수", value: "88", icon: Target, color: "text-chart-2" },
-  { label: "총 학습 시간", value: "6h", icon: Clock, color: "text-chart-3" },
-  { label: "연속 학습", value: "5일", icon: Flame, color: "text-chart-4" },
-]
-
-const completedModules = [
-  {
-    title: "HTTP 요청의 여정",
-    score: 92,
-    date: "2025-02-10",
-    badge: "Network 마스터",
-  },
-  {
-    title: "동시성/비동기 직관",
-    score: 85,
-    date: "2025-02-09",
-    badge: "Concurrency 탐험가",
-  },
-  {
-    title: "Git 3영역 + PR 루프",
-    score: 95,
-    date: "2025-02-08",
-    badge: "Git 마스터",
-  },
-]
-
-const badges = [
-  "Network 마스터",
-  "Concurrency 탐험가",
-  "Git 마스터",
-  "첫 세션 완료",
-  "5일 연속 학습",
-]
+function getInitials(name: string | null | undefined): string {
+  if (!name) return "?"
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2)
+}
 
 export function ProfileView() {
+  const { data: session, status } = useSession()
+
+  if (status === "loading") {
+    return (
+      <section className="flex items-center justify-center py-24">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </section>
+    )
+  }
+
+  if (!session?.user) {
+    return (
+      <section className="py-12">
+        <div className="mx-auto max-w-4xl px-4 text-center">
+          <p className="text-muted-foreground">로그인이 필요합니다.</p>
+        </div>
+      </section>
+    )
+  }
+
+  const user = session.user
+
+  const stats = [
+    { label: "완료 세션", value: "0", icon: BookOpen, color: "text-primary" },
+    { label: "평균 점수", value: "-", icon: Target, color: "text-chart-2" },
+    { label: "총 학습 시간", value: "0h", icon: Clock, color: "text-chart-3" },
+    { label: "연속 학습", value: "0일", icon: Flame, color: "text-chart-4" },
+  ]
+
   return (
     <section className="py-12">
       <div className="mx-auto max-w-4xl px-4 lg:px-6">
         {/* Profile Header */}
         <div className="mb-8 flex items-center gap-4">
           <Avatar className="h-16 w-16 border-2 border-border/50">
+            {user.image && <AvatarImage src={user.image} alt={user.name ?? ""} />}
             <AvatarFallback className="bg-primary/10 text-lg font-bold text-primary">
-              SY
+              {getInitials(user.name)}
             </AvatarFallback>
           </Avatar>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">김서연</h1>
-            <p className="text-sm text-muted-foreground">
-              PM / 비전공자 CS 학습 중
-            </p>
+            <h1 className="text-2xl font-bold text-foreground">
+              {user.name ?? "사용자"}
+            </h1>
+            <p className="text-sm text-muted-foreground">{user.email}</p>
           </div>
         </div>
 
         {/* Stats Grid */}
         <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
           {stats.map((stat) => (
-            <Card
-              key={stat.label}
-              className="border-border/50 bg-card"
-            >
+            <Card key={stat.label} className="border-border/50 bg-card">
               <CardContent className="flex items-center gap-3 p-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
                   <stat.icon className={`h-5 w-5 ${stat.color}`} />
@@ -98,23 +98,10 @@ export function ProfileView() {
                 학습 진행도
               </CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-col gap-4">
-              {[
-                { label: "Network", progress: 80 },
-                { label: "OS/Concurrency", progress: 60 },
-                { label: "DevTools", progress: 90 },
-                { label: "Database", progress: 20 },
-              ].map((item) => (
-                <div key={item.label} className="flex flex-col gap-1.5">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">{item.label}</span>
-                    <span className="font-medium text-foreground">
-                      {item.progress}%
-                    </span>
-                  </div>
-                  <Progress value={item.progress} className="h-1.5" />
-                </div>
-              ))}
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                세션을 완료하면 학습 진행도가 표시됩니다.
+              </p>
             </CardContent>
           </Card>
 
@@ -126,18 +113,9 @@ export function ProfileView() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-wrap gap-2">
-                {badges.map((badge) => (
-                  <div
-                    key={badge}
-                    className="flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1.5"
-                  >
-                    <Trophy className="h-3 w-3 text-primary" />
-                    <span className="text-xs font-medium text-foreground">
-                      {badge}
-                    </span>
-                  </div>
-                ))}
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Trophy className="h-4 w-4" />
+                <span>아직 획득한 배지가 없습니다.</span>
               </div>
             </CardContent>
           </Card>
@@ -151,37 +129,9 @@ export function ProfileView() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col gap-3">
-              {completedModules.map((mod) => (
-                <div
-                  key={mod.title}
-                  className="flex items-center justify-between rounded-lg bg-secondary/30 p-4"
-                >
-                  <div className="flex items-center gap-3">
-                    <CheckCircle2 className="h-4 w-4 text-primary" />
-                    <div>
-                      <p className="text-sm font-medium text-foreground">
-                        {mod.title}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {mod.date}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Badge
-                      variant="secondary"
-                      className="text-xs"
-                    >
-                      {mod.badge}
-                    </Badge>
-                    <span className="text-sm font-bold text-primary">
-                      {mod.score}점
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <p className="text-sm text-muted-foreground">
+              첫 세션을 완료하면 여기에 기록됩니다.
+            </p>
           </CardContent>
         </Card>
       </div>
