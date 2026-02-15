@@ -1,19 +1,27 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { nanoid } from "nanoid"
+import { auth } from "@/lib/auth"
 
 // POST /api/share - Create a share link
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { sessionRunId, userId } = body
+    const session = await auth()
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 })
+    }
 
-    if (!sessionRunId || !userId) {
+    const body = await request.json()
+    const { sessionRunId } = body
+
+    if (!sessionRunId) {
       return NextResponse.json(
-        { error: "sessionRunId and userId are required" },
+        { error: "sessionRunId is required" },
         { status: 400 }
       )
     }
+
+    const userId = session.user.id
 
     // Check if share link already exists for this session
     const existing = await prisma.shareLink.findFirst({

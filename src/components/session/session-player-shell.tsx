@@ -51,7 +51,6 @@ export function SessionPlayerShell({ module }: SessionPlayerShellProps) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            userId: "local-dev-user",
             moduleId: module.id,
           }),
         })
@@ -213,7 +212,6 @@ export function SessionPlayerShell({ module }: SessionPlayerShellProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sessionRunId: sessionId,
-          userId: "local-dev-user",
         }),
       })
       if (res.ok) {
@@ -375,7 +373,6 @@ export function SessionPlayerShell({ module }: SessionPlayerShellProps) {
             {activeStage === "reflection" && (
               <ReflectionComposer
                 sessionId={sessionId}
-                userId="local-dev-user"
                 onComplete={handleReflectionComplete}
               />
             )}

@@ -1,15 +1,21 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
+import { auth } from "@/lib/auth"
 
 // POST /api/reflection - Create a reflection
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { sessionRunId, userId, content, isPublic } = body
+    const session = await auth()
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 })
+    }
 
-    if (!sessionRunId || !userId || !content) {
+    const body = await request.json()
+    const { sessionRunId, content, isPublic } = body
+
+    if (!sessionRunId || !content) {
       return NextResponse.json(
-        { error: "sessionRunId, userId, and content are required" },
+        { error: "sessionRunId and content are required" },
         { status: 400 }
       )
     }
@@ -26,7 +32,7 @@ export async function POST(request: NextRequest) {
     const reflection = await prisma.reflection.create({
       data: {
         sessionRunId,
-        userId,
+        userId: session.user.id,
         content,
         isPublic: isPublic ?? false,
       },

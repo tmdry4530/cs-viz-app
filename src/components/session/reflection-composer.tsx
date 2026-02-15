@@ -8,11 +8,10 @@ import { Save, Share2, Check } from "lucide-react"
 
 interface ReflectionComposerProps {
   sessionId: string | null
-  userId: string
   onComplete: () => void
 }
 
-export function ReflectionComposer({ sessionId, userId, onComplete }: ReflectionComposerProps) {
+export function ReflectionComposer({ sessionId, onComplete }: ReflectionComposerProps) {
   const [text, setText] = useState("")
   const [isPublic, setIsPublic] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -32,7 +31,6 @@ export function ReflectionComposer({ sessionId, userId, onComplete }: Reflection
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sessionRunId: sessionId,
-          userId,
           content: text.trim(),
           isPublic,
         }),
