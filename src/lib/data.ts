@@ -9,20 +9,6 @@ export interface Module {
   color: string
 }
 
-export interface FeedPost {
-  id: string
-  author: string
-  avatar: string
-  module: string
-  score: number
-  duration: string
-  badge: string
-  summary: string
-  likes: number
-  comments: number
-  createdAt: string
-}
-
 export const modules: Module[] = [
   {
     id: "http-journey",
@@ -65,51 +51,6 @@ export const modules: Module[] = [
     time: "30분",
     tag: "DevTools",
     color: "hsl(142, 71%, 45%)",
-  },
-]
-
-export const feedPosts: FeedPost[] = [
-  {
-    id: "1",
-    author: "김서연",
-    avatar: "SE",
-    module: "HTTP 요청의 여정",
-    score: 92,
-    duration: "28분",
-    badge: "Network 마스터",
-    summary:
-      "DNS 리졸버가 캐시를 먼저 확인하고, TLS 핸드셰이크에서 인증서 검증 순서가 중요하다는 걸 처음 알았습니다. 로드밸런서가 요청을 분배하는 방식이 라운드로빈만 있는 게 아니라는 것도 신선했어요.",
-    likes: 24,
-    comments: 8,
-    createdAt: "2시간 전",
-  },
-  {
-    id: "2",
-    author: "이준호",
-    avatar: "JH",
-    module: "동시성/비동기 직관",
-    score: 85,
-    duration: "31분",
-    badge: "Concurrency 탐험가",
-    summary:
-      "데드락이 발생하는 4가지 조건(상호배제, 점유대기, 비선점, 순환대기)을 시각적으로 보니까 확 이해됐습니다. 특히 Node.js 이벤트루프에서 setTimeout(0)이 왜 즉시 실행되지 않는지 드디어 알게 됐어요.",
-    likes: 18,
-    comments: 5,
-    createdAt: "5시간 전",
-  },
-  {
-    id: "3",
-    author: "박민지",
-    avatar: "MJ",
-    module: "Git 3영역 + PR 루프",
-    score: 95,
-    duration: "26분",
-    badge: "Git 마스터",
-    summary:
-      "working tree → index → commit의 흐름을 3영역 다이어그램으로 보니까 git add와 git commit이 왜 분리되어 있는지 이해했습니다. rebase vs merge는 팀 컨벤션에 따라 선택해야 한다는 점도 좋았어요.",
-    likes: 31,
-    comments: 12,
-    createdAt: "1일 전",
   },
 ]
 

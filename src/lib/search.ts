@@ -62,30 +62,10 @@ export function searchModules(query: string): ModuleSearchResult[] {
 }
 
 /**
- * Search users (placeholder - returns mock results).
+ * Search users.
  * Requires minimum 2 characters. Case-insensitive.
+ * Returns empty array — real user search requires DB integration.
  */
-export function searchUsers(query: string): UserSearchResult[] {
-  if (!query || query.trim().length < 2) {
-    return []
-  }
-
-  const q = query.trim().toLowerCase()
-
-  const mockUsers = [
-    { id: "mock-1", name: "김서연", email: "seyeon@example.com" },
-    { id: "mock-2", name: "이준호", email: "junho@example.com" },
-    { id: "mock-3", name: "박민지", email: "minji@example.com" },
-  ]
-
-  return mockUsers
-    .filter(
-      (u) =>
-        u.name.toLowerCase().includes(q) ||
-        u.email.toLowerCase().includes(q)
-    )
-    .map((u) => ({
-      type: "user" as const,
-      ...u,
-    }))
+export function searchUsers(_query: string): UserSearchResult[] {
+  return []
 }

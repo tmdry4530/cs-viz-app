@@ -1,4 +1,4 @@
-import { modules, feedPosts, sessionStages } from "@/lib/data"
+import { modules, sessionStages } from "@/lib/data"
 
 describe("modules data", () => {
   it("has at least 3 modules", () => {
@@ -21,23 +21,6 @@ describe("modules data", () => {
   it("each module has unique id", () => {
     const ids = modules.map((m) => m.id)
     expect(new Set(ids).size).toBe(ids.length)
-  })
-})
-
-describe("feedPosts data", () => {
-  it("has at least 1 post", () => {
-    expect(feedPosts.length).toBeGreaterThan(0)
-  })
-
-  it("each post has required fields", () => {
-    for (const post of feedPosts) {
-      expect(post.id).toBeTruthy()
-      expect(post.author).toBeTruthy()
-      expect(post.module).toBeTruthy()
-      expect(typeof post.score).toBe("number")
-      expect(typeof post.likes).toBe("number")
-      expect(typeof post.comments).toBe("number")
-    }
   })
 })
 

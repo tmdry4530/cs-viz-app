@@ -64,29 +64,8 @@ describe("searchModules", () => {
 })
 
 describe("searchUsers", () => {
-  it("returns empty array for empty query", () => {
+  it("returns empty array (DB integration pending)", () => {
+    expect(searchUsers("김서연")).toEqual([])
     expect(searchUsers("")).toEqual([])
-  })
-
-  it("returns empty array for query shorter than 2 chars", () => {
-    expect(searchUsers("김")).toEqual([])
-  })
-
-  it("matches mock users by name", () => {
-    const results = searchUsers("김서연")
-    expect(results.length).toBe(1)
-    expect(results[0].name).toBe("김서연")
-    expect(results[0].type).toBe("user")
-  })
-
-  it("matches mock users by email", () => {
-    const results = searchUsers("junho")
-    expect(results.length).toBe(1)
-    expect(results[0].email).toBe("junho@example.com")
-  })
-
-  it("returns empty array for non-matching query", () => {
-    const results = searchUsers("존재하지않는유저")
-    expect(results).toEqual([])
   })
 })
